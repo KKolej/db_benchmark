@@ -1,6 +1,7 @@
 import random
 from dataclasses import dataclass
 from typing import Generator, List, Dict, Any
+from ..common.record_types import RecordType
 
 @dataclass
 class FullRecord:
@@ -64,8 +65,8 @@ class DataGenerator:
 
 
     @classmethod
-    def generate_people_list(cls, count: int, client_id: int = 0, record_type: str = 'big') -> List[Dict[str, Any]]:
-        if record_type.lower() == 'small':
+    def generate_people_list(cls, count: int, client_id: int, record_type: str) -> List[Dict[str, Any]]:
+        if record_type.lower() == RecordType.SMALL.value:
             return cls._generate_simple_records(count, client_id)
         if cls._name_combinations is None:
             cls._initialize_cache()
@@ -86,7 +87,7 @@ class DataGenerator:
         return result
 
     @classmethod
-    def _generate_simple_records(cls, count: int, client_id: int = 0) -> List[Dict[str, Any]]:
+    def _generate_simple_records(cls, count: int, client_id: int) -> List[Dict[str, Any]]:
         result = []
         for _ in range(count):
             result.append({
@@ -96,8 +97,8 @@ class DataGenerator:
         return result
 
     @classmethod
-    def generate_records_stream(cls, count: int, client_id: int = 0, record_type: str = 'big') -> Generator[Dict[str, Any], None, None]:
-        if record_type.lower() == 'small':
+    def generate_records_stream(cls, count: int, client_id: int, record_type: str) -> Generator[Dict[str, Any], None, None]:
+        if record_type.lower() == RecordType.SMALL.value:
             for _ in range(count):
                 yield {
                     'value': random.randint(1, 1000000),

@@ -9,6 +9,7 @@ from database.utils.logging_config import (
     set_current_iteration, configure_logging, ProgressLogger
 )
 from database.common.index_types import IndexType
+from database.common.record_types import RecordType
 from database.common.config_manager import ConfigManager
 from database.test_runner import TestRunner
 
@@ -22,17 +23,17 @@ def main():
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     load_dotenv(os.path.join(project_root, '.env'))
     parser = argparse.ArgumentParser(description='Database Performance Comparison')
-    parser.add_argument('--records', type=int, default=500, help='Number of records per client')
+    parser.add_argument('--records', type=int, default=500000, help='Number of records per client')
     parser.add_argument('--batch-size', type=int, default=5000, help='Batch size for data operations')
-    parser.add_argument('--clients', type=int, default=10, help='Number of parallel clients')
+    parser.add_argument('--clients', type=int, default=2, help='Number of parallel clients')
     parser.add_argument('--iterations', type=int, default=2, help='Number of test iterations')
     parser.add_argument('--mysql-pool-size', type=int, default=20, help='MySQL connection pool size')
     parser.add_argument('--mongo-pool-size', type=int, default=125, help='MongoDB connection pool size')
     parser.add_argument('--log-progress', type=str, default='True', help='Show progress (True/False)')
     parser.add_argument('--indexes-type', type=str, default=IndexType.ALL.value,
-                        help=f'Index type ({", ".join([t.value for t in IndexType])})')
-    parser.add_argument('--record-type', type=str, default='big',
-                        help='Record type (big/small). Big records contain full personal data, small records contain only numeric value and client_id')
+                        help=f'Index type')
+    parser.add_argument('--record-type', type=str, default=RecordType.SMALL.value,
+                        help=f'Record type')
 
     args = parser.parse_args()
 

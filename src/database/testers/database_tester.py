@@ -2,6 +2,7 @@ import gc
 from typing import List, Dict, Tuple, Optional
 
 from ..common import IndexType
+from ..common.record_types import RecordType
 from ..data.data_generator import DataGenerator
 from ..data.multi_client_data_generator import MultiClientDataGenerator
 from ..repositories.user_repository import UserRepository
@@ -26,8 +27,8 @@ class DatabaseTester:
             self.repository.create_indexes(index_type, table_or_collection_name)
 
     def _generate_users(self, records: int) -> List[Dict]:
-        record_type = self.config_manager.get("record_type", "big")
-        ProgressLogger.important_info(f"Generating {record_type} test users")
+        record_type = self.config_manager.get("record_type")
+        ProgressLogger.important_info(f"Generating test record with type: {record_type}")
         clients = self.config_manager.get("clients", 1)
         data = MultiClientDataGenerator.generate_data_for_clients(records, clients, record_type)
         return [u for batch in data for u in batch]

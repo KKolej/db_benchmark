@@ -3,6 +3,7 @@ import time
 from typing import Dict, List, Tuple, Optional, Any
 
 from ..common import IndexType
+from ..common.record_types import RecordType
 from ..common.repository import Repository
 from ..common.retry_decorator import RetryDecorator
 from ..common.config_manager import ConfigManager
@@ -54,9 +55,9 @@ class MySQLUserRepository(Repository):
     def create_users_bulk(self, users_data: List[Dict[str, Any]]) -> Tuple[List[str], float]:
         self.setup_profiling()
         try:
-            record_type = self.config_manager.get('record_type', 'big')
+            record_type = self.config_manager.get('record_type')
 
-            if record_type.lower() == 'small':
+            if record_type.lower() == RecordType.SMALL.value:
                 insert_query = (
                     f"INSERT INTO {self.table_name} "
                     "(value, client_id) "
@@ -128,9 +129,9 @@ class MySQLUserRepository(Repository):
         if self.table_name is None:
             return True
         try:
-            record_type = self.config_manager.get('record_type')
+            record_type = self.config_manager.get('record_type', RecordType.BIG.value)
 
-            if record_type.lower() == 'small':
+            if record_type.lower() == RecordType.SMALL.value:
                 create_table_query = f"""
                     CREATE TABLE IF NOT EXISTS {self.table_name} (
                         id INT AUTO_INCREMENT PRIMARY KEY,

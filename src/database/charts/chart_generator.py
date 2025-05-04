@@ -28,10 +28,9 @@ class ChartGenerator:
             ChartGenerator._add_labels(bars)
         ax.set_xlabel('Operacja'); ax.set_ylabel('Czas (ms)')
         idx = df['indexes_type'].iat[0] if not df.empty else ''
-        th = df['threads'].iat[0] if not df.empty else 1
         rec = df['records'].iat[0] if not df.empty else 0
         it = df['iteration'].max() if not df.empty else 1
-        ax.set_title(f'Porównanie - {idx.replace("_"," ").upper()} (rek:{rec*th}, wątki:{th}, it:{it})')
+        ax.set_title(f'Porównanie - {idx.replace("_"," ").upper()}  it:{it})')
         ax.set_xticks(x); ax.set_xticklabels(ops)
         ax.legend()
         text = []
