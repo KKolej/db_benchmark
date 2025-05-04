@@ -31,6 +31,8 @@ def main():
     parser.add_argument('--log-progress', type=str, default='True', help='Show progress (True/False)')
     parser.add_argument('--indexes-type', type=str, default=IndexType.ALL.value,
                         help=f'Index type ({", ".join([t.value for t in IndexType])})')
+    parser.add_argument('--record-type', type=str, default='big',
+                        help='Record type (big/small). Big records contain full personal data, small records contain only numeric value and client_id')
 
     args = parser.parse_args()
 
@@ -43,6 +45,7 @@ def main():
         iterations=args.iterations,
         show_progress=args.log_progress,
         indexes_type=args.indexes_type,
+        record_type=args.record_type,
     )
 
     show_progress = config_manager.get('show_progress')

@@ -3,7 +3,7 @@ from typing import List, Dict, Tuple, Optional
 
 from ..common import IndexType
 from ..data.data_generator import DataGenerator
-from ..data.parallel_data_generator import ParallelDataGenerator
+from ..data.multi_client_data_generator import MultiClientDataGenerator
 from ..repositories.user_repository import UserRepository
 from ..utils.logging_config import set_current_iteration, ProgressLogger
 from ..common.config_manager import ConfigManager
@@ -26,9 +26,10 @@ class DatabaseTester:
             self.repository.create_indexes(index_type, table_or_collection_name)
 
     def _generate_users(self, records: int) -> List[Dict]:
-        ProgressLogger.important_info("Generating test users")
+        record_type = self.config_manager.get("record_type", "big")
+        ProgressLogger.important_info(f"Generating {record_type} test users")
         clients = self.config_manager.get("clients", 1)
-        data = ParallelDataGenerator.generate_data_parallel(records, clients)
+        data = MultiClientDataGenerator.generate_data_for_clients(records, clients, record_type)
         return [u for batch in data for u in batch]
 
     def _insert_data(self, users: List[Dict]) -> Tuple[float, int]:

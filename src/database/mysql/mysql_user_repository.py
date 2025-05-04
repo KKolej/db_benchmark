@@ -54,17 +54,24 @@ class MySQLUserRepository(Repository):
     def create_users_bulk(self, users_data: List[Dict[str, Any]]) -> Tuple[List[str], float]:
         self.setup_profiling()
         try:
-            start = time.perf_counter()
+            record_type = self.config_manager.get('record_type', 'big')
 
-            insert_query = (
-                f"INSERT INTO {self.table_name} "
-                "(first_name, last_name, email, address, age, client_id) "
-                "VALUES (%(first_name)s, %(last_name)s, %(email)s, %(address)s, %(age)s, %(client_id)s)"
-            )
+            if record_type.lower() == 'small':
+                insert_query = (
+                    f"INSERT INTO {self.table_name} "
+                    "(value, client_id) "
+                    "VALUES (%(value)s, %(client_id)s)"
+                )
+            else:
+                insert_query = (
+                    f"INSERT INTO {self.table_name} "
+                    "(first_name, last_name, email, address, age, client_id) "
+                    "VALUES (%(first_name)s, %(last_name)s, %(email)s, %(address)s, %(age)s, %(client_id)s)"
+                )
+
             future = self._query_executor.execute_many(insert_query, users_data)
             result = future.result()
 
-            end = time.perf_counter()
 
             if result and hasattr(result, 'rowcount') and result.rowcount > 0:
                 inserted_ids = [str(i) for i in range(result.rowcount)]
@@ -121,17 +128,29 @@ class MySQLUserRepository(Repository):
         if self.table_name is None:
             return True
         try:
-            create_table_query = f"""
-                CREATE TABLE IF NOT EXISTS {self.table_name} (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    first_name VARCHAR(255),
-                    last_name VARCHAR(255),
-                    email VARCHAR(255),
-                    address VARCHAR(255),
-                    age INT,
-                    client_id INT DEFAULT 0
-                )
-            """
+            record_type = self.config_manager.get('record_type')
+
+            if record_type.lower() == 'small':
+                create_table_query = f"""
+                    CREATE TABLE IF NOT EXISTS {self.table_name} (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        value INT,
+                        client_id INT DEFAULT 0
+                    )
+                """
+            else:
+                create_table_query = f"""
+                    CREATE TABLE IF NOT EXISTS {self.table_name} (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        first_name VARCHAR(255),
+                        last_name VARCHAR(255),
+                        email VARCHAR(255),
+                        address VARCHAR(255),
+                        age INT,
+                        client_id INT DEFAULT 0
+                    )
+                """
+
             self._query_executor.execute_query(create_table_query).result()
             return True
         except Exception as e:

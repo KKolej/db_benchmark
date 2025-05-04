@@ -78,9 +78,9 @@ class MongoDBUserRepository(Repository):
 
     def create_users_bulk(self, docs: List[Dict]) -> Tuple[List[str], float]:
         self.setup_profiling()
-        start = time.perf_counter()
+
         res = self.collection.with_options(write_concern=WriteConcern(w=1)).insert_many(docs, ordered=True)
-        end = time.perf_counter()
+
         op_time = self._op_time('insert')
         return [str(_id) for _id in res.inserted_ids], op_time
 

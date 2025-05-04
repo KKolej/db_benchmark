@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import List, Union, Optional
+from typing import List, Dict, Union, Optional
 import os
 
 from .operation_result import OperationResult
@@ -103,7 +103,7 @@ class ResultsVisualizer:
         chart_path = self.file_manager.get_chart_path(method, records, suffix="iterations_comparison")
         ChartGenerator.generate_iterations_comparison_chart(df, chart_path)
 
-    def show_clients_comparison_chart(self, database: str, client_results: List[dict[str, any]], records: int,
+    def show_clients_comparison_chart(self, database: str, client_results: List[Dict], records: int,
                                       indexes_type: Optional[str] = None):
         if not client_results:
             return

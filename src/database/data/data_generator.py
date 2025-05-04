@@ -3,12 +3,17 @@ from dataclasses import dataclass
 from typing import Generator, List, Dict, Any
 
 @dataclass
-class Person:
+class FullRecord:
     first_name: str
     last_name: str
     email: str
     address: str
     age: int
+    client_id: int = 0
+
+@dataclass
+class SimpleRecord:
+    value: int
     client_id: int = 0
 
 class DataGenerator:
@@ -56,22 +61,12 @@ class DataGenerator:
         cls._email_cache[email_key] = email
         return email
 
-    @classmethod
-    def generate_person(cls, client_id: int = 0) -> Person:
-        if cls._name_combinations is None:
-            cls._initialize_cache()
-        first_name, last_name = random.choice(cls._name_combinations)
-        return Person(
-            first_name=first_name,
-            last_name=last_name,
-            email=cls.generate_email(first_name, last_name),
-            address=random.choice(cls.addresses),
-            age=random.randint(18, 80),
-            client_id=client_id
-        )
+
 
     @classmethod
-    def generate_people_list(cls, count: int, client_id: int = 0) -> List[Dict[str, Any]]:
+    def generate_people_list(cls, count: int, client_id: int = 0, record_type: str = 'big') -> List[Dict[str, Any]]:
+        if record_type.lower() == 'small':
+            return cls._generate_simple_records(count, client_id)
         if cls._name_combinations is None:
             cls._initialize_cache()
         result = []
@@ -91,7 +86,24 @@ class DataGenerator:
         return result
 
     @classmethod
-    def generate_people(cls, count: int, client_id: int = 0) -> Generator[Dict[str, Any], None, None]:
+    def _generate_simple_records(cls, count: int, client_id: int = 0) -> List[Dict[str, Any]]:
+        result = []
+        for _ in range(count):
+            result.append({
+                'value': random.randint(1, 1000000),
+                'client_id': client_id
+            })
+        return result
+
+    @classmethod
+    def generate_records_stream(cls, count: int, client_id: int = 0, record_type: str = 'big') -> Generator[Dict[str, Any], None, None]:
+        if record_type.lower() == 'small':
+            for _ in range(count):
+                yield {
+                    'value': random.randint(1, 1000000),
+                    'client_id': client_id
+                }
+            return
         if cls._name_combinations is None:
             cls._initialize_cache()
         name_combinations = cls._name_combinations
