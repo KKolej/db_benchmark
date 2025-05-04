@@ -31,9 +31,10 @@ def main():
     parser.add_argument('--mongo-pool-size', type=int, default=125, help='MongoDB connection pool size')
     parser.add_argument('--log-progress', type=str, default='True', help='Show progress (True/False)')
     parser.add_argument('--indexes-type', type=str, default=IndexType.ALL.value,
-                        help=f'Index type')
-    parser.add_argument('--record-type', type=str, default=RecordType.SMALL.value,
-                        help=f'Record type')
+                        help=f'Index type ({", ".join([t.value for t in IndexType])})')
+    parser.add_argument('--record-type', type=str, default=RecordType.BIG.value,
+                        help=f'Record type ({RecordType.BIG.value}/{RecordType.SMALL.value}). Big records contain full personal data, small records contain only numeric value and client_id')
+    parser.add_argument('--test-update', type=str, default='True', help='Test update operations (True/False)')
 
     args = parser.parse_args()
 
@@ -47,6 +48,7 @@ def main():
         show_progress=args.log_progress,
         indexes_type=args.indexes_type,
         record_type=args.record_type,
+        test_update=args.test_update,
     )
 
     show_progress = config_manager.get('show_progress')

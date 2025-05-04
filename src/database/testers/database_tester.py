@@ -60,6 +60,22 @@ class DatabaseTester:
 
         return (total_time / clients if clients else 0), total_records, results
 
+    def _update_users(self) -> Tuple[float, int, List[Dict[str, int]]]:
+        clients = self.config_manager.get("clients", 1)
+        total_time = total_updated = 0
+        results = []
+
+        record_type = self.config_manager.get("record_type", RecordType.BIG.value)
+
+        for cid in range(clients):
+            updated, t = self.repository.update_users(client_id=cid, record_type=record_type)
+            total_time += t
+            total_updated += updated
+
+            results.append({"client_id": cid, "records": updated, "time": t})
+
+        return (total_time / clients if clients else 0), total_updated, results
+
     def test_fetch_all_users(
             self,
             iteration: int,
@@ -92,6 +108,31 @@ class DatabaseTester:
         gc.collect()
 
         return insert_t, fetch_t, inserted, results, users
+
+    def test_update_users(
+            self,
+            iteration: int,
+            index_type: IndexType,
+            number_of_records: int,
+            users: List[Dict],
+    ) -> Tuple[float, int, List[Dict]]:
+        set_current_iteration(iteration)
+        if index_type:
+            ProgressLogger.important_info(f"Testing update on {self.db_name} with {index_type.upper()} indexes")
+        else:
+            ProgressLogger.important_info(f"Testing update on {self.db_name} without indexes")
+
+        record_type = self.config_manager.get("record_type", RecordType.BIG.value)
+        record_type_desc = "full records with personal data" if record_type == RecordType.BIG.value else "simple records with numeric values"
+        ProgressLogger.important_info(f"Updating {record_type} test users ({record_type_desc})")
+
+        self.repository.setup_profiling()
+
+        ProgressLogger.important_info(f"Start update data")
+        update_t, updated, results = self._update_users()
+        gc.collect()
+
+        return update_t, updated, results
 
     def close(self):
         if hasattr(self, 'repository') and self.repository:

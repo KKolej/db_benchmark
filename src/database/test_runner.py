@@ -15,6 +15,7 @@ class TestRunner:
     def __init__(self, total_records: int, iterations: int, index_types, max_batch_size: int, show_progress: bool, config_manager: ConfigManager) -> None:
         self.total_records = total_records
         self.iterations = iterations
+        self.config_manager = config_manager
         idx_enum = IndexType.from_string(index_types)
         self.index_types = IndexType.get_all_types() if idx_enum == IndexType.ALL else (
             [index_types] if isinstance(index_types, str) else index_types or [IndexType.NO_INDEXES.value])
@@ -70,6 +71,13 @@ class TestRunner:
         self.visualizer.add_result(db, "Insert", self.total_records, insert_t, "database", idx, 1, iteration)
         self.visualizer.add_result(db, "FetchAll", self.total_records, fetch_t, "database", idx, 1, iteration)
 
+    def _save_update_results(self, db: str, idx: str, iteration: int, update_t: float, updated: int, results: List[Dict]) -> None:
+        for r in results:
+            r["iteration"] = iteration
+        self.client_results.setdefault(db, {}).setdefault(idx, []).extend(results)
+
+        self.visualizer.add_result(db, "Update", self.total_records, update_t, "database", idx, 1, iteration)
+
     def run(self) -> bool:
         for idx in self.index_types:
             ProgressLogger.important_info(f"Starting tests for index type: {idx.upper()}")
@@ -101,6 +109,20 @@ class TestRunner:
                         generated_data = None
 
                     self._save_results(db_name, idx, i, insert_t, fetch_t, inserted, results)
+
+                    # Wykonaj test aktualizacji rekordów, jeśli opcja jest włączona
+                    test_update = self.config_manager.get('test_update', 'True').lower() == 'true'
+                    if test_update:
+                        try:
+                            update_t, updated, update_results = tester.test_update_users(
+                                iteration=i,
+                                index_type=idx,
+                                number_of_records=self.total_records,
+                                users=generated_data
+                            )
+                            self._save_update_results(db_name, idx, i, update_t, updated, update_results)
+                        except Exception as e:
+                            ProgressLogger.error(f"Error testing update on {db_name} with {idx} index: {e}")
 
                     if generated_data is not None and i not in test_data_cache:
                         test_data_cache[i] = generated_data

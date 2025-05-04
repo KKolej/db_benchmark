@@ -109,6 +109,30 @@ class MySQLUserRepository(Repository):
             return [], 0.0
 
     @RetryDecorator.retry_on_error()
+    def update_users(
+            self,
+            client_id: int,
+            record_type: str
+    ) -> Tuple[int, float]:
+        self.setup_profiling()
+        try:
+            if record_type == RecordType.SMALL.value:
+                update_query = f"UPDATE {self.table_name} SET value = value + 1 WHERE client_id = %s"
+            else:
+                update_query = f"UPDATE {self.table_name} SET age = 30 WHERE client_id = %s"
+
+            params = [client_id]
+            future = self._query_executor.execute_query(update_query, tuple(params))
+            result = future.result()
+
+            modified_count = result.rowcount if result and hasattr(result, 'rowcount') else 0
+            execution_time = self._get_query_time('update')
+            return modified_count, execution_time
+        except Exception as e:
+            ProgressLogger.error(f"Error updating users: {e}")
+            return 0, 0.0
+
+    @RetryDecorator.retry_on_error()
     def clear_collection(self) -> bool:
         try:
             self._query_executor.execute_query(f"DROP TABLE IF EXISTS {self.table_name}").result()

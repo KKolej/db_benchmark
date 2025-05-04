@@ -7,6 +7,7 @@ from .mongodb_connection import MongoDBConnection
 from ..common.config_manager import ConfigManager
 from ..common.repository import Repository
 from ..common.index_types import IndexType
+from ..common.record_types import RecordType
 from ..utils.logging_config import ProgressLogger
 
 
@@ -32,7 +33,7 @@ class MongoDBUserRepository(Repository):
         crud_ops = {
             "insert": {"op": {"$in": ["insert", "command"]}, "command.insert": {"$exists": True}},
             "find": {"op": {"$in": ["query", "getmore", "command"]}, "command.find": {"$exists": True}},
-            "update": {"op": {"$in": ["update", "command"]}, "command.update": {"$exists": True}},
+            "update": {"op": {"$in": ["update", "command"]}, "command.updateMany": {"$exists": True}},
             "delete": {"op": {"$in": ["remove", "command"]}, "command.delete": {"$exists": True}},
         }
 
@@ -42,6 +43,12 @@ class MongoDBUserRepository(Repository):
         query = {"$and": [{"$or": [crud_ops[operation_type]]}]}
         latest = self.system_profile.find_one(query, sort=[("ts", -1)])
         if not latest:
+            # Dla operacji update, spróbuj alternatywne zapytanie
+            if operation_type == "update":
+                alt_query = {"op": "command", "command.update": {"$exists": True}}
+                latest = self.system_profile.find_one(alt_query, sort=[("ts", -1)])
+                if latest:
+                    return latest.get("millis", 0)
             raise Exception("Nie znaleziono operacji.")
 
         lsid = latest.get("command", {}).get("lsid")
@@ -92,6 +99,28 @@ class MongoDBUserRepository(Repository):
         op_time = self._op_time('find')
 
         return result, op_time
+
+    def update_users(self, client_id: int, record_type: str) -> Tuple[int, float]:
+        self.setup_profiling()
+        flt = {"client_id": client_id}
+
+        if record_type == RecordType.SMALL.value:
+            update_data = {"$inc": {"value": 1}}
+        else:
+            update_data = {"$set": {"age": 30}}
+
+        start = time.perf_counter()
+        result = self.collection.update_many(flt, update_data)
+        end = time.perf_counter()
+        elapsed_ms = (end - start) * 1000  # Convert to milliseconds
+
+        try:
+            op_time = self._op_time('update')
+        except Exception as e:
+            ProgressLogger.error(f"Error getting update time from profiler: {e}")
+            op_time = elapsed_ms
+
+        return result.modified_count, op_time
 
     def _create_idx(self, spec, name) -> bool:
         try:
