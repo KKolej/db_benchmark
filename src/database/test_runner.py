@@ -78,6 +78,13 @@ class TestRunner:
 
         self.visualizer.add_result(db, "Update", self.total_records, update_t, "database", idx, 1, iteration)
 
+    def _save_delete_results(self, db: str, idx: str, iteration: int, delete_t: float, deleted: int, results: List[Dict]) -> None:
+        for r in results:
+            r["iteration"] = iteration
+        self.client_results.setdefault(db, {}).setdefault(idx, []).extend(results)
+
+        self.visualizer.add_result(db, "Delete", self.total_records, delete_t, "database", idx, 1, iteration)
+
     def run(self) -> bool:
         for idx in self.index_types:
             ProgressLogger.important_info(f"Starting tests for index type: {idx.upper()}")
@@ -110,7 +117,6 @@ class TestRunner:
 
                     self._save_results(db_name, idx, i, insert_t, fetch_t, inserted, results)
 
-                    # Wykonaj test aktualizacji rekordów, jeśli opcja jest włączona
                     test_update = self.config_manager.get('test_update', 'True').lower() == 'true'
                     if test_update:
                         try:
@@ -123,6 +129,19 @@ class TestRunner:
                             self._save_update_results(db_name, idx, i, update_t, updated, update_results)
                         except Exception as e:
                             ProgressLogger.error(f"Error testing update on {db_name} with {idx} index: {e}")
+
+                    test_delete = self.config_manager.get('test_delete', 'True').lower() == 'true'
+                    if test_delete:
+                        try:
+                            delete_t, deleted, delete_results = tester.test_delete_users(
+                                iteration=i,
+                                index_type=idx,
+                                number_of_records=self.total_records,
+                                users=generated_data
+                            )
+                            self._save_delete_results(db_name, idx, i, delete_t, deleted, delete_results)
+                        except Exception as e:
+                            ProgressLogger.error(f"Error testing delete on {db_name} with {idx} index: {e}")
 
                     if generated_data is not None and i not in test_data_cache:
                         test_data_cache[i] = generated_data

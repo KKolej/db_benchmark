@@ -23,7 +23,7 @@ def main():
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     load_dotenv(os.path.join(project_root, '.env'))
     parser = argparse.ArgumentParser(description='Database Performance Comparison')
-    parser.add_argument('--records', type=int, default=500000, help='Number of records per client')
+    parser.add_argument('--records', type=int, default=5000, help='Number of records per client')
     parser.add_argument('--batch-size', type=int, default=5000, help='Batch size for data operations')
     parser.add_argument('--clients', type=int, default=2, help='Number of parallel clients')
     parser.add_argument('--iterations', type=int, default=2, help='Number of test iterations')
@@ -35,6 +35,7 @@ def main():
     parser.add_argument('--record-type', type=str, default=RecordType.BIG.value,
                         help=f'Record type ({RecordType.BIG.value}/{RecordType.SMALL.value}). Big records contain full personal data, small records contain only numeric value and client_id')
     parser.add_argument('--test-update', type=str, default='True', help='Test update operations (True/False)')
+    parser.add_argument('--test-delete', type=str, default='True', help='Test delete operations (True/False)')
 
     args = parser.parse_args()
 
@@ -49,6 +50,7 @@ def main():
         indexes_type=args.indexes_type,
         record_type=args.record_type,
         test_update=args.test_update,
+        test_delete=args.test_delete,
     )
 
     show_progress = config_manager.get('show_progress')

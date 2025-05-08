@@ -1,5 +1,3 @@
-import logging
-import time
 from typing import Dict, List, Tuple, Optional, Any
 
 from ..common import IndexType
@@ -15,10 +13,10 @@ from ..utils.logging_config import ProgressLogger
 
 class MySQLUserRepository(Repository):
     def __init__(
-        self,
-        table_name: str,
-        query_executor: Optional[MySQLQueryExecutor] = None,
-        config_manager: Optional[ConfigManager] = None
+            self,
+            table_name: str,
+            query_executor: Optional[MySQLQueryExecutor] = None,
+            config_manager: Optional[ConfigManager] = None
     ):
         self.config_manager = config_manager or ConfigManager()
         self._query_executor = query_executor or MySQLQueryExecutor(config_manager=self.config_manager)
@@ -73,7 +71,6 @@ class MySQLUserRepository(Repository):
             future = self._query_executor.execute_many(insert_query, users_data)
             result = future.result()
 
-
             if result and hasattr(result, 'rowcount') and result.rowcount > 0:
                 inserted_ids = [str(i) for i in range(result.rowcount)]
             else:
@@ -119,7 +116,7 @@ class MySQLUserRepository(Repository):
             if record_type == RecordType.SMALL.value:
                 update_query = f"UPDATE {self.table_name} SET value = value + 1 WHERE client_id = %s"
             else:
-                update_query = f"UPDATE {self.table_name} SET age = 30 WHERE client_id = %s"
+                update_query = f"UPDATE {self.table_name} SET age = 30 WHERE client_id = %s"  # toDo insert more same in mongo
 
             params = [client_id]
             future = self._query_executor.execute_query(update_query, tuple(params))
@@ -131,6 +128,25 @@ class MySQLUserRepository(Repository):
         except Exception as e:
             ProgressLogger.error(f"Error updating users: {e}")
             return 0, 0.0
+
+    @RetryDecorator.retry_on_error()
+    def delete_users(
+            self,
+            client_id: int,
+            record_type: str
+    ) -> Tuple[int, float]:
+        self.setup_profiling()
+        delete_query = f"DELETE FROM {self.table_name} WHERE client_id = %s"
+        params = [client_id]
+
+        future = self._query_executor.execute_query(delete_query, tuple(params))
+
+        result = future.result()
+
+        deleted_count = result.rowcount if result and hasattr(result, 'rowcount') else 0
+        execution_time = self._get_query_time('delete')
+
+        return deleted_count, execution_time
 
     @RetryDecorator.retry_on_error()
     def clear_collection(self) -> bool:
@@ -183,7 +199,6 @@ class MySQLUserRepository(Repository):
             return False
 
     def close(self) -> None:
-        """Close all resources used by this repository."""
         if hasattr(self, 'cursor') and self.cursor:
             try:
                 self.cursor.close()

@@ -76,6 +76,22 @@ class DatabaseTester:
 
         return (total_time / clients if clients else 0), total_updated, results
 
+    def _delete_users(self) -> Tuple[float, int, List[Dict[str, int]]]:
+        clients = self.config_manager.get("clients")
+        total_time = total_deleted = 0
+        results = []
+
+        record_type = self.config_manager.get("record_type", RecordType.BIG.value)
+
+        for cid in range(clients):
+            deleted, t = self.repository.delete_users(client_id=cid, record_type=record_type)
+            total_time += t
+            total_deleted += deleted
+
+            results.append({"client_id": cid, "records": deleted, "time": t})
+
+        return (total_time / clients), total_deleted, results
+
     def test_fetch_all_users(
             self,
             iteration: int,
@@ -133,6 +149,31 @@ class DatabaseTester:
         gc.collect()
 
         return update_t, updated, results
+
+    def test_delete_users(
+            self,
+            iteration: int,
+            index_type: IndexType,
+            number_of_records: int,
+            users: List[Dict],
+    ) -> Tuple[float, int, List[Dict]]:
+        set_current_iteration(iteration)
+        if index_type:
+            ProgressLogger.important_info(f"Testing delete on {self.db_name} with {index_type.upper()} indexes")
+        else:
+            ProgressLogger.important_info(f"Testing delete on {self.db_name} without indexes")
+
+        record_type = self.config_manager.get("record_type", RecordType.BIG.value)
+        record_type_desc = "full records with personal data" if record_type == RecordType.BIG.value else "simple records with numeric values"
+        ProgressLogger.important_info(f"Deleting {record_type} test users ({record_type_desc})")
+
+        self.repository.setup_profiling()
+
+        ProgressLogger.important_info(f"Start delete data")
+        delete_t, deleted, results = self._delete_users()
+        gc.collect()
+
+        return delete_t, deleted, results
 
     def close(self):
         if hasattr(self, 'repository') and self.repository:

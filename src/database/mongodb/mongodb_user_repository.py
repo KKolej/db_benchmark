@@ -13,11 +13,11 @@ from ..utils.logging_config import ProgressLogger
 
 class MongoDBUserRepository(Repository):
     def __init__(
-        self,
-        connection_str: Optional[str] = None,
-        db_name: Optional[str] = None,
-        collection_name: Optional[str] = None,
-        config_manager: Optional[ConfigManager] = None,
+            self,
+            connection_str: Optional[str] = None,
+            db_name: Optional[str] = None,
+            collection_name: Optional[str] = None,
+            config_manager: Optional[ConfigManager] = None,
     ):
         cfg = config_manager or ConfigManager()
         self.conn = MongoDBConnection(
@@ -33,22 +33,19 @@ class MongoDBUserRepository(Repository):
         crud_ops = {
             "insert": {"op": {"$in": ["insert", "command"]}, "command.insert": {"$exists": True}},
             "find": {"op": {"$in": ["query", "getmore", "command"]}, "command.find": {"$exists": True}},
-            "update": {"op": {"$in": ["update", "command"]}, "command.updateMany": {"$exists": True}},
-            "delete": {"op": {"$in": ["remove", "command"]}, "command.delete": {"$exists": True}},
+            "update": [
+                {"op": {"$in": ["update", "command"]}, "command.updateMany": {"$exists": True}},
+                {"op": {"$in": ["update", "command"]}, "command.u": {"$exists": True}},
+            ],
+            "delete": [
+                {"op": "remove"},
+                {"op": "command", "command.delete": {"$exists": True}},
+            ]
         }
-
-        if operation_type not in crud_ops:
-            raise ValueError("operation_type must be one of: insert, find, update, delete")
 
         query = {"$and": [{"$or": [crud_ops[operation_type]]}]}
         latest = self.system_profile.find_one(query, sort=[("ts", -1)])
         if not latest:
-            # Dla operacji update, spróbuj alternatywne zapytanie
-            if operation_type == "update":
-                alt_query = {"op": "command", "command.update": {"$exists": True}}
-                latest = self.system_profile.find_one(alt_query, sort=[("ts", -1)])
-                if latest:
-                    return latest.get("millis", 0)
             raise Exception("Nie znaleziono operacji.")
 
         lsid = latest.get("command", {}).get("lsid")
@@ -62,7 +59,6 @@ class MongoDBUserRepository(Repository):
 
         i = sum(op.get("millis", 0) for op in cursor)
         return i
-
 
     def clear_collection(self) -> bool:
         self.collection.drop()
@@ -107,20 +103,21 @@ class MongoDBUserRepository(Repository):
         if record_type == RecordType.SMALL.value:
             update_data = {"$inc": {"value": 1}}
         else:
-            update_data = {"$set": {"age": 30}}
+            update_data = {"$set": {"age": 30}} #ToDo more fields
 
-        start = time.perf_counter()
         result = self.collection.update_many(flt, update_data)
-        end = time.perf_counter()
-        elapsed_ms = (end - start) * 1000  # Convert to milliseconds
-
-        try:
-            op_time = self._op_time('update')
-        except Exception as e:
-            ProgressLogger.error(f"Error getting update time from profiler: {e}")
-            op_time = elapsed_ms
+        op_time = self._op_time('update')
 
         return result.modified_count, op_time
+
+    def delete_users(self, client_id: int, record_type: str) -> Tuple[int, float]:
+        self.setup_profiling()
+        flt = {"client_id": client_id}
+
+        result = self.collection.delete_many(flt)
+        op_time = self._op_time('delete')
+
+        return result.deleted_count, op_time
 
     def _create_idx(self, spec, name) -> bool:
         try:

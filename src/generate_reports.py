@@ -23,7 +23,7 @@ class ReportGenerator:
         return None, None, None
 
     @staticmethod
-    def get_results_from_json(json_file: str) -> Tuple[float, float, float, float]:
+    def get_results_from_json(json_file: str) -> Tuple[float, float, float, float, float, float, float, float]:
         try:
             with open(json_file, 'r', encoding='utf-8') as f:
                 results = json.load(f).get('results', [])
@@ -31,13 +31,21 @@ class ReportGenerator:
                 (r['time'] for r in results if r['database'] == 'MongoDB' and r['operation'].lower() == 'insert'), 0)
             mongodb_fetch = next((r['time'] for r in results if
                                   r['database'] == 'MongoDB' and r['operation'].lower() in ['fetchall', 'fetch']), 0)
+            mongodb_update = next((r['time'] for r in results if
+                                  r['database'] == 'MongoDB' and r['operation'].lower() == 'update'), 0)
+            mongodb_delete = next((r['time'] for r in results if
+                                  r['database'] == 'MongoDB' and r['operation'].lower() == 'delete'), 0)
             mysql_insert = next(
                 (r['time'] for r in results if r['database'] == 'MySQL' and r['operation'].lower() == 'insert'), 0)
             mysql_fetch = next((r['time'] for r in results if
                                 r['database'] == 'MySQL' and r['operation'].lower() in ['fetchall', 'fetch']), 0)
-            return mongodb_insert, mongodb_fetch, mysql_insert, mysql_fetch
+            mysql_update = next((r['time'] for r in results if
+                                r['database'] == 'MySQL' and r['operation'].lower() == 'update'), 0)
+            mysql_delete = next((r['time'] for r in results if
+                                r['database'] == 'MySQL' and r['operation'].lower() == 'delete'), 0)
+            return mongodb_insert, mongodb_fetch, mongodb_update, mongodb_delete, mysql_insert, mysql_fetch, mysql_update, mysql_delete
         except Exception:
-            return 0, 0, 0, 0
+            return 0, 0, 0, 0, 0, 0, 0, 0
 
     @staticmethod
     def get_results_path(results_folder: str) -> str:
@@ -76,9 +84,9 @@ class ReportGenerator:
 
         csv_header = [
             'Typ indeksu',
-            'MongoDB Insert', 'MongoDB Fetch',
-            'MySQL Insert', 'MySQL Fetch',
-            'MongoDB vs MySQL Insert', 'MongoDB vs MySQL Fetch'
+            'MongoDB Insert', 'MongoDB Fetch', 'MongoDB Update', 'MongoDB Delete',
+            'MySQL Insert', 'MySQL Fetch', 'MySQL Update', 'MySQL Delete',
+            'MongoDB vs MySQL Insert', 'MongoDB vs MySQL Fetch', 'MongoDB vs MySQL Update', 'MongoDB vs MySQL Delete'
         ]
 
         summary_lines = [
@@ -100,33 +108,41 @@ class ReportGenerator:
                     ProgressLogger.error(f"Brak pliku JSON: {json_file}")
                     continue
 
-                mi, mf, yi, yf = cls.get_results_from_json(json_file)
-                mi_ms, mf_ms = mi, mf
-                yi_ms, yf_ms = yi, yf
+                mi, mf, mu, md, yi, yf, yu, yd = cls.get_results_from_json(json_file)
+                mi_ms, mf_ms, mu_ms, md_ms = mi, mf, mu, md
+                yi_ms, yf_ms, yu_ms, yd_ms = yi, yf, yu, yd
 
                 insert_cmp = cls.calculate_comparison(mi_ms, yi_ms)
                 fetch_cmp = cls.calculate_comparison(mf_ms, yf_ms)
+                update_cmp = cls.calculate_comparison(mu_ms, yu_ms)
+                delete_cmp = cls.calculate_comparison(md_ms, yd_ms)
 
                 idx_type = sub.split('_', 1)[1] if '_' in sub else sub
                 idx_type = cls.format_index_type(idx_type)
 
                 csv_writer.writerow([
                     idx_type,
-                    f"{mi_ms:.2f}", f"{mf_ms:.2f}",
-                    f"{yi_ms:.2f}", f"{yf_ms:.2f}",
-                    insert_cmp, fetch_cmp
+                    f"{mi_ms:.2f}", f"{mf_ms:.2f}", f"{mu_ms:.2f}", f"{md_ms:.2f}",
+                    f"{yi_ms:.2f}", f"{yf_ms:.2f}", f"{yu_ms:.2f}", f"{yd_ms:.2f}",
+                    insert_cmp, fetch_cmp, update_cmp, delete_cmp
                 ])
 
                 summary_lines.extend([
                     f"Typ indeksu: {idx_type}",
                     f"  MongoDB Insert: {mi_ms:.2f} ms", f"  MongoDB Fetch: {mf_ms:.2f} ms",
-                    f"  MySQL Insert:  {yi_ms:.2f} ms", f"  MySQL Fetch:  {yf_ms:.2f} ms"
+                    f"  MongoDB Update: {mu_ms:.2f} ms", f"  MongoDB Delete: {md_ms:.2f} ms",
+                    f"  MySQL Insert:  {yi_ms:.2f} ms", f"  MySQL Fetch:  {yf_ms:.2f} ms",
+                    f"  MySQL Update:  {yu_ms:.2f} ms", f"  MySQL Delete:  {yd_ms:.2f} ms"
                 ])
 
                 if insert_cmp != 'N/A':
                     summary_lines.append(f"  Insert: {insert_cmp}")
                 if fetch_cmp != 'N/A':
                     summary_lines.append(f"  Fetch: {fetch_cmp}")
+                if update_cmp != 'N/A':
+                    summary_lines.append(f"  Update: {update_cmp}")
+                if delete_cmp != 'N/A':
+                    summary_lines.append(f"  Delete: {delete_cmp}")
 
                 summary_lines.extend(["", "-" * 80, ""])
 

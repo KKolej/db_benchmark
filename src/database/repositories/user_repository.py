@@ -22,3 +22,10 @@ class UserRepository():
     def create_indexes(self, index_type, table_or_collection_name):
         pass
 
+    @abstractmethod
+    def delete_users(self, client_id: int, record_type: str) -> Tuple[int, float]:
+        pass
+
+    @abstractmethod
+    def update_users(self, client_id: int, record_type: str) -> Tuple[int, float]:
+        pass
