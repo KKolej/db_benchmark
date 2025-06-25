@@ -337,3 +337,219 @@ Aplikacja jest idealna do:
 - **Skalowanie** z liczbą rekordów i klientów
 - **Porównanie** NoSQL vs SQL
 - **Metodologia** powtarzalnych testów wydajności
+
+---
+
+## Szczegółowe Funkcjonalności Testowe
+
+### 1. Testowanie Operacji CRUD
+
+#### **INSERT (Wstawianie danych)**
+**Co testuje:**
+- Czas wstawiania dużych partii danych (bulk insert)
+- Wydajność przy różnych rozmiarach batch'y
+- Wpływ indeksów na szybkość wstawiania
+
+**Parametry testowe:**
+- Liczba rekordów: 100 - 100,000+
+- Rozmiar batch'a: konfigurowalne
+- Typy danych: pełne rekordy vs proste wartości numeryczne
+
+**Co można udowodnić:**
+- MongoDB jest szybsze przy bulk insert bez indeksów
+- MySQL ma stały overhead transakcyjny
+- Indeksy spowalniają operacje INSERT w obu bazach
+
+#### **SELECT (Pobieranie danych)**
+**Co testuje:**
+- Czas pobierania wszystkich rekordów dla klienta
+- Wydajność filtrowania po client_id
+- Wpływ indeksów na szybkość zapytań
+
+**Parametry testowe:**
+- Filtrowanie po kluczu obcym (client_id)
+- Różne rozmiary zbiorów danych
+- Z indeksem i bez indeksu
+
+**Co można udowodnić:**
+- Indeksy dramatycznie przyspieszają SELECT w MySQL
+- MongoDB ma lepszą wydajność bez indeksów przy małych zbiorach
+- Różnica wydajności rośnie z rozmiarem danych
+
+#### **UPDATE (Aktualizacja danych)**
+**Co testuje:**
+- Czas aktualizacji wszystkich rekordów klienta
+- Wydajność operacji SET vs INCREMENT
+- Wpływ indeksów na szybkość aktualizacji
+
+**Typy aktualizacji:**
+- Proste rekordy: INCREMENT wartości numerycznej
+- Pełne rekordy: SET wieku i imienia
+
+**Co można udowodnić:**
+- MongoDB ma przewagę w operacjach UPDATE
+- Indeksy pomagają w lokalizacji rekordów do aktualizacji
+- Różne typy aktualizacji mają różną wydajność
+
+#### **DELETE (Usuwanie danych)**
+**Co testuje:**
+- Czas usuwania wszystkich rekordów klienta
+- Wydajność operacji DELETE z filtrem
+- Wpływ indeksów na szybkość usuwania
+
+**Co można udowodnić:**
+- MongoDB szybsze w operacjach DELETE
+- Indeksy przyspieszają lokalizację rekordów do usunięcia
+- MySQL ma większy overhead przy usuwaniu
+
+### 2. Testowanie Typów Indeksów
+
+#### **NO_INDEXES (Bez indeksów)**
+**Co testuje:**
+- Wydajność "surową" bazy danych
+- Skanowanie pełnych tabel/kolekcji
+- Baseline dla porównań
+
+**Co można udowodnić:**
+- MongoDB ma przewagę przy braku indeksów
+- Operacje są wolniejsze ale bardziej przewidywalne
+- Różnice w architekturze storage engine
+
+#### **FOREIGN_KEY (Indeks klucza obcego)**
+**Co testuje:**
+- Wpływ indeksu na client_id
+- Przyspieszenie operacji filtrowania
+- Koszt utrzymania indeksu
+
+**Co można udowodnić:**
+- Indeksy drastycznie przyspieszają SELECT/UPDATE/DELETE
+- Koszt INSERT wzrasta przez utrzymanie indeksu
+- ROI indeksów zależy od typu operacji
+
+### 3. Testowanie Skalowalności
+
+#### **Liczba Rekordów**
+**Zakresy testowe:** 100, 1K, 10K, 100K, 1M+
+**Co można udowodnić:**
+- Jak wydajność skaluje się z rozmiarem danych
+- Punkty przełamania wydajności
+- Różnice w krzywych skalowalności między bazami
+
+#### **Liczba Klientów (Równoległość)**
+**Zakresy testowe:** 1, 2, 5, 10, 20+ klientów
+**Co można udowodnić:**
+- Wydajność przy obciążeniu równoległym
+- Bottlenecki w connection pooling
+- Różnice w obsłudze współbieżności
+
+#### **Rozmiar Batch'y**
+**Zakresy testowe:** 100, 1K, 5K, 10K rekordów na batch
+**Co można udowodnić:**
+- Optymalny rozmiar batch'a dla każdej bazy
+- Trade-off między pamięcią a wydajnością
+- Różnice w obsłudze dużych transakcji
+
+### 4. Testowanie Typów Danych
+
+#### **BIG Records (Pełne rekordy)**
+**Zawartość:** imię, nazwisko, email, adres, wiek, client_id
+**Rozmiar:** ~200-300 bajtów na rekord
+**Co można udowodnić:**
+- Wydajność przy realistycznych danych
+- Wpływ rozmiaru rekordu na operacje
+- Różnice w kompresji danych
+
+#### **SMALL Records (Proste rekordy)**
+**Zawartość:** wartość numeryczna, client_id
+**Rozmiar:** ~20-30 bajtów na rekord
+**Co można udowodnić:**
+- Maksymalna wydajność przy minimalnych danych
+- Overhead bazy danych vs rozmiar danych
+- Różnice w storage efficiency
+
+### 5. Analiza Statystyczna
+
+#### **Wielokrotne Iteracje**
+**Funkcjonalność:**
+- Każdy test powtarzany N razy
+- Obliczanie średnich, median, odchyleń
+- Wykrywanie anomalii wydajnościowych
+
+**Co można udowodnić:**
+- Stabilność wydajności w czasie
+- Wariancja czasów wykonania
+- Statystyczna istotność różnic
+
+#### **Wizualizacja Wyników**
+**Typy wykresów:**
+- Wykresy słupkowe porównań średnich
+- Histogramy rozkładu czasów
+- Wykresy liniowe trendów między iteracjami
+
+**Co można udowodnić:**
+- Wizualne różnice w wydajności
+- Rozkłady czasów wykonania
+- Trendy i anomalie
+
+---
+
+## Możliwe Wnioski i Dowody Naukowe
+
+### 1. Wydajność Operacyjna
+**Hipotezy do sprawdzenia:**
+- MongoDB jest szybsze w operacjach INSERT i DELETE
+- MySQL ma przewagę w operacjach SELECT z indeksami
+- Operacje UPDATE są szybsze w MongoDB
+- Indeksy zawsze przyspieszają SELECT ale spowalniają INSERT
+
+### 2. Skalowalność
+**Hipotezy do sprawdzenia:**
+- MongoDB lepiej skaluje się z liczbą rekordów
+- MySQL lepiej radzi sobie z wieloma równoległymi klientami
+- Istnieją punkty przełamania gdzie jedna baza wyprzedza drugą
+- Rozmiar batch'a ma różny wpływ na różne bazy
+
+### 3. Efektywność Indeksów
+**Hipotezy do sprawdzenia:**
+- ROI indeksów zależy od proporcji operacji read/write
+- Indeksy mają większy wpływ w MySQL niż MongoDB
+- Koszt utrzymania indeksów jest wyższy w MySQL
+- Punkt równowagi między korzyściami a kosztami indeksów
+
+### 4. Charakterystyki Storage
+**Hipotezy do sprawdzenia:**
+- MongoDB ma lepszą kompresję danych
+- MySQL ma bardziej przewidywalną wydajność
+- Różnice w overhead'zie storage engine
+- Wpływ rozmiaru rekordu na wydajność
+
+### 5. Architektoniczne
+**Hipotezy do sprawdzenia:**
+- Document-based storage vs relacyjny ma różne charakterystyki
+- Connection pooling działa inaczej w różnych bazach
+- Transakcyjność wpływa na wydajność MySQL
+- Schema-less design daje przewagę MongoDB
+
+---
+
+## Metodologia Badawcza
+
+### Kontrola Zmiennych
+- **Sprzęt:** Identyczne środowisko testowe
+- **Sieć:** Lokalne połączenia (eliminacja latencji)
+- **Konfiguracja:** Porównywalne ustawienia baz danych
+- **Dane:** Identyczne zestawy testowe
+
+### Pomiary
+- **Precyzja:** Pomiary w milisekundach
+- **Źródło:** Natywne narzędzia profilowania baz
+- **Powtarzalność:** Wielokrotne iteracje
+- **Izolacja:** Czyszczenie danych między testami
+
+### Walidacja
+- **Weryfikacja danych:** Sprawdzanie poprawności operacji
+- **Monitoring zasobów:** Kontrola zużycia CPU/pamięci
+- **Logowanie:** Szczegółowe logi wszystkich operacji
+- **Reprodukowalność:** Możliwość powtórzenia testów
+
+Ta aplikacja dostarcza solidnych, empirycznych danych do porównania wydajności baz danych MongoDB i MySQL w kontrolowanych warunkach, co czyni ją idealną podstawą do pracy inżynierskiej lub badań naukowych.
