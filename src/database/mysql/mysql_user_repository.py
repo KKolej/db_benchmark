@@ -116,7 +116,7 @@ class MySQLUserRepository(Repository):
             if record_type == RecordType.SMALL.value:
                 update_query = f"UPDATE {self.table_name} SET value = value + 1 WHERE client_id = %s"
             else:
-                update_query = f"UPDATE {self.table_name} SET age = 30 WHERE client_id = %s"  # toDo insert more same in mongo
+                update_query = f"UPDATE {self.table_name} SET age = 30, first_name = 'test_name' WHERE client_id = %s"
 
             params = [client_id]
             future = self._query_executor.execute_query(update_query, tuple(params))

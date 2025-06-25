@@ -109,7 +109,7 @@ class MongoDBUserRepository(Repository):
         if record_type == RecordType.SMALL.value:
             update_data = {"$inc": {"value": 1}}
         else:
-            update_data = {"$set": {"age": 30}} #ToDo more fields
+            update_data = {"$set": {"age": 30, "first_name": "test_name"}}
 
         result = self.collection.update_many(flt, update_data)
         op_time = self._op_time('update')
