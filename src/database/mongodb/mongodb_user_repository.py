@@ -43,7 +43,13 @@ class MongoDBUserRepository(Repository):
             ]
         }
 
-        query = {"$and": [{"$or": [crud_ops[operation_type]]}]}
+        # Fix: Handle both single objects and lists properly for $or operator
+        op_conditions = crud_ops[operation_type]
+        if isinstance(op_conditions, list):
+            query = {"$or": op_conditions}
+        else:
+            query = op_conditions
+
         latest = self.system_profile.find_one(query, sort=[("ts", -1)])
         if not latest:
             raise Exception("Nie znaleziono operacji.")
