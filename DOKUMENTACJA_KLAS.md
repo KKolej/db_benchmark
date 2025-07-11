@@ -244,6 +244,145 @@ Wybrane technologie charakteryzują się:
 
 ---
 
+## Opis stosu technologicznego i uzasadnienie wybranych technologii
+
+### Architektura stosu technologicznego
+
+Stos technologiczny aplikacji do porównania wydajności baz danych został zaprojektowany jako wielowarstwowa architektura, w której każdy komponent pełni specyficzną rolę i współpracuje z pozostałymi elementami w sposób zapewniający maksymalną efektywność, wiarygodność pomiarów oraz łatwość rozwoju i utrzymania systemu.
+
+#### Warstwa infrastruktury i konteneryzacji
+
+**Docker i Docker Compose** stanowią fundament infrastruktury aplikacji, zapewniając izolację środowiska testowego oraz powtarzalność warunków eksperymentalnych. Wybór tej technologii wynika z kilku kluczowych czynników:
+
+**Izolacja środowiska**: Kontenery Docker gwarantują, że bazy danych działają w identycznych warunkach niezależnie od systemu hosta, eliminując zmienne środowiskowe, które mogłyby wpłynąć na wyniki pomiarów. Każda baza danych działa w swoim dedykowanym kontenerze z predefiniowaną konfiguracją, co zapewnia sprawiedliwe warunki porównania.
+
+**Powtarzalność eksperymentów**: Docker Compose umożliwia definiowanie całego środowiska testowego w formie kodu (Infrastructure as Code), co gwarantuje, że każde uruchomienie testów odbywa się w identycznych warunkach. Jest to kluczowe dla wiarygodności naukowej przeprowadzanych pomiarów.
+
+**Łatwość wdrożenia**: Konteneryzacja eliminuje problemy związane z instalacją i konfiguracją baz danych na różnych systemach operacyjnych, znacznie upraszczając proces uruchomienia aplikacji przez innych badaczy lub użytkowników.
+
+#### Warstwa systemów bazodanowych
+
+**MongoDB 6.0 i MySQL 8.0** zostały wybrane jako reprezentatywne przykłady dwóch fundamentalnie różnych paradygmatów bazodanowych:
+
+**MongoDB 6.0** reprezentuje nowoczesne bazy dokumentowe NoSQL, charakteryzujące się:
+- **Elastycznym schematem**: Możliwość przechowywania dokumentów o różnej strukturze bez konieczności predefiniowania schematu
+- **Natywną obsługą JSON/BSON**: Bezpośrednie mapowanie obiektów aplikacji na struktury bazodanowe
+- **Horyzontalną skalowalnością**: Wbudowane mechanizmy shardingu i replikacji
+- **Zaawansowanymi możliwościami agregacji**: Potężny framework agregacji umożliwiający złożone operacje analityczne
+
+**MySQL 8.0** reprezentuje dojrzałe relacyjne bazy danych SQL, oferujące:
+- **Silną spójność ACID**: Gwarancje transakcyjne zapewniające integralność danych
+- **Zaawansowane mechanizmy indeksowania**: Różnorodne typy indeksów optymalizujące wydajność zapytań
+- **Dojrzałe narzędzia optymalizacji**: Zaawansowany optymalizator zapytań i mechanizmy cache'owania
+- **Standardizację SQL**: Zgodność ze standardami SQL zapewniająca przenośność aplikacji
+
+Wybór tych konkretnych wersji wynika z ich stabilności, wydajności oraz reprezentatywności dla swoich kategorii. MongoDB 6.0 wprowadza znaczące ulepszenia wydajnościowe w stosunku do wcześniejszych wersji, podczas gdy MySQL 8.0 oferuje nowoczesne funkcjonalności przy zachowaniu kompatybilności wstecznej.
+
+#### Warstwa języka programowania i środowiska uruchomieniowego
+
+**Python 3.12** został wybrany jako główny język implementacji z następujących powodów:
+
+**Bogaty ekosystem bibliotek**: Python oferuje najbogatszy zestaw bibliotek do analizy danych, wizualizacji oraz dostępu do baz danych, co znacznie przyspiesza rozwój aplikacji i zapewnia wysoką jakość implementacji.
+
+**Czytelność i maintainability**: Składnia Pythona sprzyja tworzeniu czytelnego, dobrze udokumentowanego kodu, co jest kluczowe dla aplikacji naukowych, gdzie zrozumienie implementacji jest równie ważne jak wyniki.
+
+**Wydajność dla zastosowań I/O-intensive**: Chociaż Python nie jest najszybszym językiem pod względem obliczeń CPU, aplikacje bazodanowe są głównie ograniczone przez operacje I/O, gdzie Python oferuje doskonałą wydajność dzięki asynchronicznym bibliotekom.
+
+**Wsparcie dla wzorców projektowych**: Python doskonale wspiera zaawansowane wzorce projektowe (Repository, Strategy, Factory), które są kluczowe dla architektury aplikacji.
+
+#### Warstwa zarządzania zależnościami
+
+**Poetry** został wybrany jako narzędzie do zarządzania zależnościami ze względu na:
+
+**Deterministyczne zarządzanie wersjami**: Poetry generuje pliki lock, które gwarantują identyczne wersje bibliotek na wszystkich środowiskach, co jest kluczowe dla powtarzalności eksperymentów naukowych.
+
+**Rozdzielenie zależności**: Jasne rozdzielenie między zależnościami produkcyjnymi a deweloperskimi, co upraszcza wdrożenie i redukuje rozmiar środowiska produkcyjnego.
+
+**Nowoczesne standardy**: Poetry implementuje najnowsze standardy PEP dla pakietów Python, zapewniając kompatybilność z przyszłymi wersjami ekosystemu.
+
+#### Warstwa dostępu do danych
+
+**PyMongo 4.12.0** i **PyMySQL 1.1.1** stanowią kluczowe komponenty warstwy dostępu do danych:
+
+**PyMongo 4.12.0** - oficjalny driver MongoDB:
+- **Natywna optymalizacja**: Bezpośrednia implementacja protokołu MongoDB zapewniająca maksymalną wydajność
+- **Zaawansowane funkcjonalności**: Pełne wsparcie dla wszystkich funkcji MongoDB, włączając agregacje, transakcje i change streams
+- **Connection pooling**: Wbudowane zarządzanie pulą połączeń optymalizujące wykorzystanie zasobów
+- **Monitoring i profiling**: Integracja z narzędziami monitorowania MongoDB umożliwiająca szczegółową analizę wydajności
+
+**PyMySQL 1.1.1** - czysty Python driver dla MySQL:
+- **Brak zależności zewnętrznych**: Implementacja w czystym Pythonie eliminuje problemy z bibliotekami C/C++
+- **Kompatybilność**: Pełna zgodność z MySQL Connector API przy lepszej wydajności
+- **Bezpieczeństwo**: Wbudowane mechanizmy ochrony przed SQL injection
+- **Elastyczność konfiguracji**: Szerokie możliwości dostrajania parametrów połączenia
+
+#### Warstwa analizy i przetwarzania danych
+
+**Pandas 2.2.0** i **NumPy 1.23+** tworzą fundament warstwy analitycznej:
+
+**Pandas 2.2.0** został wybrany ze względu na:
+- **Wydajność**: Znaczące ulepszenia wydajnościowe w wersji 2.x, szczególnie dla operacji na dużych zbiorach danych
+- **Funkcjonalność**: Kompleksowy zestaw narzędzi do manipulacji, agregacji i analizy danych czasowych
+- **Integracja**: Bezproblemowa współpraca z bibliotekami wizualizacji i eksportu danych
+- **Memory efficiency**: Optymalizowane wykorzystanie pamięci kluczowe dla testów z dużymi zbiorami danych
+
+**NumPy 1.23+** zapewnia:
+- **Wydajne operacje numeryczne**: Zoptymalizowane operacje na tablicach wielowymiarowych
+- **Podstawę dla innych bibliotek**: Fundament dla Pandas i Matplotlib
+- **Stabilność**: Dojrzała, szeroko testowana implementacja
+
+#### Warstwa wizualizacji
+
+**Matplotlib 3.8.2** wraz z zależnościami tworzy kompletny system wizualizacji:
+
+**Matplotlib 3.8.2** oferuje:
+- **Profesjonalną jakość wykresów**: Możliwość tworzenia publikacyjnych wizualizacji
+- **Elastyczność**: Szerokie możliwości dostosowania wyglądu wykresów
+- **Różnorodność typów wykresów**: Od prostych wykresów słupkowych po złożone wizualizacje 3D
+- **Eksport do różnych formatów**: PNG, PDF, SVG dla różnych zastosowań
+
+**Zależności Matplotlib**:
+- **Contourpy 1.3.1**: Generowanie konturów dla zaawansowanych wizualizacji
+- **Fonttools 4.22.0+**: Zarządzanie fontami zapewniające spójny wygląd wykresów
+- **Pillow 8+**: Przetwarzanie obrazów i eksport do formatów rastrowych
+
+#### Warstwa bezpieczeństwa i konfiguracji
+
+**Cryptography 44.0.2** i **python-dotenv 1.1.0** zapewniają bezpieczeństwo i elastyczność konfiguracji:
+
+**Cryptography 44.0.2**:
+- **Bezpieczne połączenia**: Obsługa szyfrowanych połączeń z bazami danych
+- **Zgodność ze standardami**: Implementacja najnowszych standardów kryptograficznych
+- **Wydajność**: Optymalizowane implementacje algorytmów kryptograficznych
+
+**python-dotenv 1.1.0**:
+- **Bezpieczne zarządzanie konfiguracją**: Oddzielenie wrażliwych danych od kodu źródłowego
+- **Elastyczność środowisk**: Łatwe przełączanie między konfiguracjami dla różnych środowisk
+- **Zgodność z best practices**: Implementacja wzorców twelve-factor app
+
+### Synergiczne powiązania między komponentami
+
+Wybrane technologie tworzą spójny ekosystem, w którym każdy komponent wzmacnia możliwości pozostałych:
+
+**Integracja Docker + Python**: Konteneryzacja zapewnia izolację środowiska, podczas gdy Python oferuje bogaty ekosystem bibliotek do testowania wydajności baz danych.
+
+**Synergię MongoDB/MySQL + Python drivers**: Natywne drivery zapewniają optymalną wydajność przy zachowaniu jednolitego API w warstwie aplikacji.
+
+**Współpracę Pandas + Matplotlib**: Bezproblemowa integracja umożliwia płynne przejście od analizy danych do ich wizualizacji.
+
+**Komplementarność Poetry + Docker**: Poetry zarządza zależnościami Python, podczas gdy Docker zapewnia izolację całego środowiska.
+
+### Uzasadnienie architektury wielowarstwowej
+
+Zastosowana architektura wielowarstwowa zapewnia:
+
+**Separację odpowiedzialności**: Każda warstwa ma jasno zdefiniowane zadania, co ułatwia rozwój i utrzymanie
+**Testowalność**: Możliwość niezależnego testowania każdej warstwy
+**Skalowalność**: Łatwość dodawania nowych baz danych lub typów testów
+**Maintainability**: Czytelna struktura ułatwiająca modyfikacje i rozszerzenia
+
+---
+
 ## Klasy Główne
 
 ### `main.py`
