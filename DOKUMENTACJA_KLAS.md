@@ -1,14 +1,246 @@
 # Dokumentacja Klas - System Porównania Wydajności Baz Danych
 
 ## Spis Treści
-1. [Klasy Główne](#klasy-główne)
-2. [Moduł MongoDB](#moduł-mongodb)
-3. [Moduł MySQL](#moduł-mysql)
-4. [Moduł Testowania](#moduł-testowania)
-5. [Moduł Generowania Danych](#moduł-generowania-danych)
-6. [Moduł Obsługi Wyników](#moduł-obsługi-wyników)
-7. [Komponenty Wspólne](#komponenty-wspólne)
-8. [Podsumowanie Aplikacji](#podsumowanie-aplikacji)
+1. [Czym jest ta Aplikacja](#czym-jest-ta-aplikacja)
+2. [Wykaz zastosowanych technologii](#wykaz-zastosowanych-technologii)
+3. [Klasy Główne](#klasy-główne)
+4. [Moduł MongoDB](#moduł-mongodb)
+5. [Moduł MySQL](#moduł-mysql)
+6. [Moduł Testowania](#moduł-testowania)
+7. [Moduł Generowania Danych](#moduł-generowania-danych)
+8. [Moduł Obsługi Wyników](#moduł-obsługi-wyników)
+9. [Komponenty Wspólne](#komponenty-wspólne)
+10. [Podsumowanie Aplikacji](#podsumowanie-aplikacji)
+
+---
+
+## Czym jest ta Aplikacja
+
+### Wprowadzenie i Cel Aplikacji
+
+**System Porównania Wydajności Baz Danych** to zaawansowana aplikacja naukowa i inżynierska, zaprojektowana specjalnie do przeprowadzania kompleksowych analiz porównawczych wydajności między dwoma fundamentalnie różnymi typami systemów bazodanowych: **MongoDB** (baza dokumentowa NoSQL) oraz **MySQL** (relacyjna baza danych SQL). Aplikacja stanowi solidne narzędzie badawcze, które umożliwia empiryczne porównanie charakterystyk wydajnościowych tych systemów w kontrolowanych warunkach testowych.
+
+### Znaczenie Naukowe i Praktyczne
+
+W dzisiejszym świecie technologii informacyjnych, wybór odpowiedniego systemu bazodanowego ma kluczowe znaczenie dla sukcesu projektów informatycznych. Różnice między bazami NoSQL a SQL nie ograniczają się jedynie do modelu danych - obejmują również fundamentalne różnice w architekturze, mechanizmach przechowywania danych, strategiach indeksowania oraz charakterystykach wydajnościowych. Ta aplikacja wypełnia lukę w dostępnych narzędziach badawczych, dostarczając precyzyjnych, powtarzalnych i statystycznie wiarygodnych pomiarów wydajności.
+
+### Architektura i Filozofia Projektowa
+
+Aplikacja została zaprojektowana zgodnie z najlepszymi praktykami inżynierii oprogramowania, wykorzystując zaawansowane wzorce projektowe i nowoczesną architekturę modułową. Główne założenia projektowe obejmują:
+
+**1. Modularność i Rozszerzalność**
+System został zbudowany w oparciu o luźno powiązane moduły, z których każdy odpowiada za konkretny aspekt funkcjonalności. Architektura umożliwia łatwe dodawanie nowych typów baz danych, metod testowania czy sposobów wizualizacji wyników bez konieczności modyfikacji istniejącego kodu.
+
+**2. Abstrakcja i Polimorfizm**
+Wykorzystanie wzorców Repository, Strategy i Factory pozwala na jednolite traktowanie różnych systemów bazodanowych przy zachowaniu ich specyficznych charakterystyk. Abstrakcyjne klasy bazowe definiują wspólne interfejsy, podczas gdy konkretne implementacje dostosowują się do specyfiki każdej bazy danych.
+
+**3. Konfigurowalność i Elastyczność**
+System oferuje szerokie możliwości konfiguracji poprzez argumenty wiersza poleceń oraz zmienne środowiskowe. Użytkownicy mogą dostosować wszystkie aspekty testów: od liczby rekordów i iteracji, przez typy indeksów, aż po parametry połączeń z bazami danych.
+
+**4. Wiarygodność Statystyczna**
+Aplikacja implementuje zaawansowane mechanizmy zapewniające wiarygodność statystyczną wyników, w tym wielokrotne iteracje testów, kontrolę zmiennych środowiskowych oraz szczegółowe logowanie wszystkich operacji.
+
+### Funkcjonalności Podstawowe
+
+**Testowanie Operacji CRUD**
+System przeprowadza kompleksowe testy wszystkich podstawowych operacji bazodanowych:
+- **CREATE (INSERT)** - Pomiar wydajności wstawiania danych w różnych konfiguracjach batch'y
+- **READ (SELECT)** - Analiza czasów pobierania danych z filtrowaniem i bez
+- **UPDATE** - Testowanie modyfikacji istniejących rekordów
+- **DELETE** - Pomiar wydajności usuwania danych
+
+**Analiza Wpływu Indeksów**
+Aplikacja testuje różne scenariusze indeksowania:
+- **NO_INDEXES** - Testy bez indeksów, pokazujące "surową" wydajność
+- **FOREIGN_KEY** - Analiza wpływu indeksów na klucze obce
+- **ALL** - Kompleksowe testowanie wszystkich typów indeksów
+
+**Symulacja Obciążenia Rzeczywistego**
+System umożliwia symulację różnych scenariuszy obciążenia:
+- Różne liczby równoległych klientów (1-20+)
+- Skalowalne rozmiary zbiorów danych (100 - 1,000,000+ rekordów)
+- Różne rozmiary batch'y dla operacji bulk
+
+### Funkcjonalności Zaawansowane
+
+**Generowanie Danych Testowych**
+Aplikacja zawiera zaawansowany system generowania realistycznych danych testowych:
+- **Pełne rekordy** zawierające imiona, nazwiska, adresy email, adresy zamieszkania i wiek
+- **Proste rekordy** z wartościami numerycznymi dla testów maksymalnej wydajności
+- **Cachowanie** kombinacji danych dla optymalizacji wydajności generowania
+- **Deterministyczne generowanie** zapewniające powtarzalność testów
+
+**System Pomiaru Wydajności**
+Implementacja wykorzystuje natywne narzędzia profilowania każdej bazy danych:
+- **MongoDB** - System profilowania MongoDB z precyzyjnymi pomiarami czasów operacji
+- **MySQL** - PERFORMANCE_SCHEMA dla dokładnego pomiaru wydajności zapytań
+- **Precyzja pomiarów** - Pomiary w milisekundach z kontrolą overhead'u systemu
+
+**Zarządzanie Połączeniami**
+Zaawansowany system zarządzania połączeniami z bazami danych:
+- **Connection Pooling** - Optymalizacja wydajności poprzez pule połączeń
+- **Asynchroniczne wykonywanie** - ThreadPoolExecutor dla równoległego przetwarzania
+- **Retry mechanizmy** - Automatyczne ponawianie operacji w przypadku błędów
+- **Graceful shutdown** - Bezpieczne zamykanie połączeń i zasobów
+
+### Wizualizacja i Analiza Wyników
+
+**Generowanie Wykresów**
+System automatycznie generuje różnorodne wizualizacje wyników:
+- **Wykresy słupkowe** porównujące średnie czasy wykonania operacji
+- **Histogramy** pokazujące rozkłady czasów wykonania
+- **Wykresy liniowe** przedstawiające trendy między iteracjami
+- **Wykresy porównawcze** z automatycznymi obliczeniami różnic procentowych
+
+**Eksport Danych**
+Wszystkie wyniki są automatycznie eksportowane w formatach:
+- **CSV** - Dla dalszej analizy w narzędziach statystycznych
+- **JSON** - Dla integracji z innymi systemami
+- **PNG** - Wysokiej jakości wykresy gotowe do publikacji
+
+**Organizacja Wyników**
+Inteligentny system organizacji wyników:
+- Automatyczne tworzenie struktury folderów według typów indeksów
+- Timestamping wszystkich wyników
+- Metadane zawierające pełną konfigurację testów
+
+### Zastosowania Praktyczne
+
+**Prace Inżynierskie i Naukowe**
+Aplikacja dostarcza solidnej podstawy empirycznej dla:
+- Prac dyplomowych analizujących wydajność baz danych
+- Badań naukowych nad wpływem indeksów na wydajność
+- Analiz porównawczych NoSQL vs SQL
+- Studiów przypadków optymalizacji systemów bazodanowych
+
+**Projekty Komercyjne**
+System wspiera decyzje biznesowe poprzez:
+- Benchmarking różnych rozwiązań bazodanowych
+- Analizę kosztów i korzyści różnych architektur
+- Planowanie skalowania systemów
+- Optymalizację istniejących rozwiązań
+
+**Edukacja i Szkolenia**
+Aplikacja służy jako narzędzie edukacyjne dla:
+- Demonstracji różnic między typami baz danych
+- Nauczania wpływu indeksów na wydajność
+- Pokazania metodologii testowania wydajności
+- Praktycznego zastosowania wzorców projektowych
+
+### Wartość Dodana i Innowacyjność
+
+**Metodologia Badawcza**
+Aplikacja implementuje zaawansowaną metodologię badawczą:
+- **Kontrola zmiennych** - Identyczne warunki testowe dla obu baz
+- **Izolacja testów** - Czyszczenie danych między testami
+- **Powtarzalność** - Deterministyczne generowanie danych testowych
+- **Walidacja** - Weryfikacja poprawności wszystkich operacji
+
+**Precyzja Pomiarów**
+System zapewnia wysoką precyzję pomiarów poprzez:
+- Wykorzystanie natywnych narzędzi profilowania baz danych
+- Minimalizację overhead'u systemu pomiarowego
+- Kontrolę garbage collection i zarządzania pamięcią
+- Szczegółowe logowanie wszystkich operacji
+
+**Skalowalność Testów**
+Aplikacja umożliwia testowanie w szerokim zakresie scenariuszy:
+- Od małych zbiorów danych (100 rekordów) do dużych (1M+ rekordów)
+- Od pojedynczych klientów do symulacji wysokiego obciążenia
+- Różne profile danych (od prostych wartości do złożonych dokumentów)
+
+### Technologie i Narzędzia
+
+**Stack Technologiczny**
+- **Python 3.12+** - Nowoczesny język programowania z zaawansowanymi możliwościami
+- **MongoDB 4.6+** - Wiodąca baza dokumentowa NoSQL
+- **MySQL 8.0+** - Zaawansowana relacyjna baza danych
+- **Docker** - Konteneryzacja dla spójności środowiska testowego
+
+**Biblioteki i Frameworki**
+- **PyMongo** - Oficjalny driver MongoDB dla Pythona
+- **PyMySQL** - Czysty Python driver dla MySQL
+- **Pandas** - Zaawansowana analiza i manipulacja danych
+- **Matplotlib** - Profesjonalne generowanie wykresów
+- **Poetry** - Nowoczesne zarządzanie zależnościami
+
+### Perspektywy Rozwoju
+
+Aplikacja została zaprojektowana z myślą o przyszłym rozwoju i może być rozszerzona o:
+- Dodatkowe systemy bazodanowe (PostgreSQL, Cassandra, Redis)
+- Nowe typy testów (transakcje, agregacje, full-text search)
+- Zaawansowane metryki (zużycie pamięci, I/O, CPU)
+- Integrację z systemami CI/CD
+- Web interface dla łatwiejszego użytkowania
+
+Ta aplikacja reprezentuje kompleksowe podejście do analizy wydajności baz danych, łącząc solidne podstawy teoretyczne z praktyczną implementacją, co czyni ją idealnym narzędziem zarówno dla celów akademickich, jak i komercyjnych.
+
+---
+
+## Wykaz zastosowanych technologii
+
+Poniżej przedstawiono wykaz wszystkich istotnych technologii zastosowanych w opracowaniu aplikacji do porównania wydajności baz danych. Lista obejmuje języki programowania, systemy bazodanowe, narzędzia konteneryzacji, biblioteki oraz frameworki wykorzystane w implementacji, wizualizacji i analizie danych.
+
+### Języki programowania i środowiska uruchomieniowe
+- **Python 3.12** - Główny język programowania aplikacji
+- **Docker Compose 3.8** - Orkiestracja kontenerów
+
+### Systemy bazodanowe
+- **MongoDB 6.0** - Dokumentowa baza danych NoSQL
+- **MySQL 8.0** - Relacyjna baza danych SQL
+
+### Narzędzia konteneryzacji i wirtualizacji
+- **Docker** - Platforma konteneryzacji
+- **Docker Compose** - Narzędzie do definiowania i uruchamiania aplikacji wielokontenerowych
+
+### Zarządzanie zależnościami i środowiskiem
+- **Poetry** - Nowoczesne narzędzie do zarządzania zależnościami Python
+- **Poetry Core** - Podstawowy system budowania dla Poetry
+
+### Biblioteki dostępu do baz danych
+- **PyMongo 4.12.0** - Oficjalny driver MongoDB dla Python
+- **PyMySQL 1.1.1** - Czysty Python driver dla MySQL
+- **mysql-connector-python 8.2.0** - Oficjalny MySQL Connector dla Python
+
+### Biblioteki analizy i manipulacji danych
+- **Pandas 2.2.0** - Zaawansowana biblioteka do analizy i manipulacji danych
+- **NumPy 1.23+** - Fundamentalna biblioteka do obliczeń numerycznych
+
+### Biblioteki wizualizacji i generowania wykresów
+- **Matplotlib 3.8.2** - Kompleksowa biblioteka do tworzenia wykresów
+- **Contourpy 1.3.1** - Biblioteka do generowania konturów (zależność Matplotlib)
+- **Cycler 0.10+** - Narzędzie do cyklicznego przechodzenia przez wartości (zależność Matplotlib)
+- **Fonttools 4.22.0+** - Biblioteka do manipulacji fontami (zależność Matplotlib)
+- **Kiwisolver 1.3.1+** - Solver ograniczeń (zależność Matplotlib)
+- **Pillow 8+** - Biblioteka do przetwarzania obrazów (zależność Matplotlib)
+- **Pyparsing 2.3.1+** - Biblioteka do parsowania (zależność Matplotlib)
+
+### Biblioteki konfiguracji i zarządzania środowiskiem
+- **python-dotenv 1.1.0** - Ładowanie zmiennych środowiskowych z plików .env
+- **python-dateutil 2.9.0** - Rozszerzenia dla standardowego modułu datetime
+
+### Biblioteki bezpieczeństwa i kryptografii
+- **Cryptography 44.0.2** - Kompleksowa biblioteka kryptograficzna
+- **DNSpython 2.7.0** - Toolkit DNS (zależność PyMongo)
+
+### Narzędzia systemowe i pomocnicze
+- **Packaging 20.0+** - Podstawowe narzędzia do pakowania Python
+- **Six 1.5+** - Biblioteka kompatybilności Python 2/3
+
+### Specyfikacja środowiska testowego
+Aplikacja została zaprojektowana i przetestowana w następującym środowisku:
+- **System operacyjny**: Linux (Ubuntu/Debian)
+- **Architektura**: x86_64
+- **Minimalne wymagania pamięci**: 4 GB RAM
+- **Zalecane wymagania pamięci**: 8+ GB RAM dla testów z dużymi zbiorami danych
+
+### Charakterystyka technologiczna
+Wybrane technologie charakteryzują się:
+- **Wysoką wydajnością** - Optymalizowane biblioteki numeryczne i bazodanowe
+- **Stabilnością** - Dojrzałe, szeroko stosowane w środowisku produkcyjnym
+- **Kompatybilnością** - Pełna zgodność między wersjami i platformami
+- **Skalowalnością** - Możliwość obsługi zarówno małych jak i dużych zbiorów danych
+- **Otwartością** - Większość technologii oparta na licencjach open source
 
 ---
 
