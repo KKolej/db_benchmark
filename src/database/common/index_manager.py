@@ -15,13 +15,15 @@ class IndexManager(ABC):
     def create_indexes(self, index_type: IndexType, table_name: str) -> bool:
         try:
             method_map = {
-                IndexType.FOREIGN_KEY.value:   self.create_foreign_key_index(table_name),
+                IndexType.FOREIGN_KEY.value: lambda: self.create_foreign_key_index(table_name),
             }
 
-            return method_map[index_type]
-        except KeyError:
-            ProgressLogger.warn(f"Unknown index type: {index_type}")
-            return False
+            method = method_map.get(index_type)
+            if method:
+                return method()
+            else:
+                ProgressLogger.warn(f"Unknown index type: {index_type}")
+                return False
         except Exception as exc:
             ProgressLogger.error(f"Error creating indexes: {exc}")
             return False

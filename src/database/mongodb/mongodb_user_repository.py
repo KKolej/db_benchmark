@@ -128,6 +128,7 @@ class MongoDBUserRepository(Repository):
     def _create_idx(self, spec, name) -> bool:
         try:
             self.collection.create_index(spec, name=name)
+            ProgressLogger.important_info(f"Created MongoDB index: {name}")
             return True
         except Exception as err:
             ProgressLogger.error(f"index {name} error: {err}")
