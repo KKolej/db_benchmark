@@ -126,13 +126,13 @@ class ReportGenerator:
 
                 summary_lines.extend([
                     f"Typ indeksu: {formatted_index_type}",
-                    f"  MongoDB Insert: {mongodb_insert_time:.2f} ms", f"  MongoDB Fetch: {mongodb_fetch_time:.2f} ms",
+                    f"  MongoDB Insert: {mongodb_insert_time:.2f} ms", f"  MongoDB Select: {mongodb_fetch_time:.2f} ms",
                     f"  MongoDB Update: {mongodb_update_time:.2f} ms", f"  MongoDB Delete: {mongodb_delete_time:.2f} ms",
-                    f"  MySQL Insert:  {mysql_insert_time:.2f} ms", f"  MySQL Fetch:  {mysql_fetch_time:.2f} ms",
+                    f"  MySQL Insert:  {mysql_insert_time:.2f} ms", f"  MySQL Select:  {mysql_fetch_time:.2f} ms",
                     f"  MySQL Update:  {mysql_update_time:.2f} ms", f"  MySQL Delete:  {mysql_delete_time:.2f} ms"
                 ])
 
-                for label, comparison in zip(["Insert", "Fetch", "Update", "Delete"], [insert_cmp, fetch_cmp, update_cmp, delete_cmp]):
+                for label, comparison in zip(["Insert", "Select", "Update", "Delete"], [insert_cmp, fetch_cmp, update_cmp, delete_cmp]):
                     if comparison != 'N/A':
                         summary_lines.append(f"  {label}: {comparison}")
 

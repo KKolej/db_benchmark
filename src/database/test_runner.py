@@ -69,7 +69,7 @@ class TestRunner:
         self.client_results.setdefault(db, {}).setdefault(idx, []).extend(results)
 
         self.visualizer.add_result(db, "Insert", self.total_records, insert_t, "database", idx, 1, iteration)
-        self.visualizer.add_result(db, "FetchAll", self.total_records, fetch_t, "database", idx, 1, iteration)
+        self.visualizer.add_result(db, "Select", self.total_records, fetch_t, "database", idx, 1, iteration)
 
     def _save_update_results(self, db: str, idx: str, iteration: int, update_t: float, updated: int, results: List[Dict]) -> None:
         for r in results:

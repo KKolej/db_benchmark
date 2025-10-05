@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 import subprocess
+import resource
 from dotenv import load_dotenv
 import gc
 
@@ -17,7 +18,6 @@ from database.test_runner import TestRunner
 def main():
     set_current_iteration(0)
 
-    import resource
     resource.setrlimit(resource.RLIMIT_AS, (18 * 1024 * 1024 * 1024, -1))
 
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

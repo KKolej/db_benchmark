@@ -58,12 +58,12 @@ class ChartGenerator:
         index_type = df['indexes_type'].iat[0] if not df.empty else ''
         num_records = df['records'].iat[0] if not df.empty else 0
         max_iteration = df['iteration'].max() if not df.empty else 1
-        ax.set_title(f'Porownanie - {index_type.replace("_", " ").upper()}  it:{max_iteration}')
+        ax.set_title(f'Porownanie - {index_type.replace("_", " ").upper()}  records number: {num_records} iterations:{max_iteration}')
         ax.set_xticks(x_positions)
         ax.set_xticklabels(operations)
         ax.legend()
         comparison_text = ChartGenerator._generate_comparison_text(operations, mysql_avg_times, mongodb_avg_times)
-        plt.figtext(0.5, 0.01, '; '.join(comparison_text), ha='center', fontsize=10,
+        plt.figtext(0.5, 0.01, '', ha='center', fontsize=10,
                     bbox={'facecolor': 'lightgray', 'alpha': 0.5, 'pad': 5})
         plt.tight_layout(rect=[0, 0.1, 1, 0.95])
         plt.savefig(output_path)
@@ -83,7 +83,7 @@ class ChartGenerator:
                     axs[i].hist(execution_times, bins=20, alpha=0.5, label=database)
             axs[i].set_title(operation)
             axs[i].set_xlabel('Czas (ms)')
-            axs[i].set_ylabel('Liczba')
+            axs[i].set_ylabel('Ilość operacji')
             axs[i].legend()
         plt.tight_layout()
         plt.savefig(output_path)
